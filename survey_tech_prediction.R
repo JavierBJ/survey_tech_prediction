@@ -9,7 +9,7 @@ library(caret)
 #-----------------------------
 
 # Read dataset and columns of interest
-original_dataset <- read.dta("tc_data_old.dta")
+original_dataset <- read.dta("tc_data.dta")
 cols <- c('sindicato','industria','paro_self_1','paro_self_2',
          'habilidades_1','habilidades_2','habilidades_3','habilidades_4','habilidades_5','habilidades_6',
          'habilidades_7','habilidades_8','habilidades_9','habilidades_10',
@@ -52,7 +52,7 @@ income_grid <- expand.grid(k = c(1,3,5,7)) # These are the k values tried for kn
 
 # The model varies a lot between executions. Run it several times and keep the best model
 best_score <- 0
-for (i in 1:2) {
+for (i in 1:30) {
   # Train K-nn to predict unlabeled incomes
   fit_income <- train(income_2~., income_labeled, method='knn', metric=metric, trControl=control, tuneGrid=income_grid)
   predictions_income <- predict(fit_income, dataset)
@@ -114,3 +114,8 @@ imputetech <- function(a, b) {
     a
   }
 }
+new_tech <- mapply(imputeknn, dataset$income_2, predictions_income) # Apply imputeknn element by element
+
+# Create new dataset with imputed columns
+out_dataset <- data.frame("ResponseId"=original_dataset$ResponseId, "income"=new_income, "exp1_tech_cons"=new_tech)
+write.csv(out_dataset, "tc_data_imputed.csv")
